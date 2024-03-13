@@ -209,7 +209,7 @@ export async function getAudioDuration(buffer: Buffer | string | Readable) {
  */
 export async function getAudioWaveform(buffer: Buffer | string | Readable, logger?: Logger) {
 	try {
-		const audioDecode = (arg: any) => import('audio-decode').then(({ default: audioDecode }) => audioDecode(arg))
+		const audioDecode = (buffer: Buffer | ArrayBuffer | Uint8Array) => import('audio-decode').then(({ default: audioDecode }) => audioDecode(buffer))
 		let audioData: Buffer
 		if(Buffer.isBuffer(buffer)) {
 			audioData = buffer
