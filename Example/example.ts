@@ -1,13 +1,13 @@
 import { Boom } from '@hapi/boom'
 import NodeCache from 'node-cache'
 import readline from 'readline'
-import makeWASocket, { AnyMessageContent, delay, DisconnectReason, fetchLatestBaileysVersion, getAggregateVotesInPollMessage, makeCacheableSignalKeyStore, makeInMemoryStore, PHONENUMBER_MCC, proto, useMultiFileAuthState, WAMessageContent, WAMessageKey } from '../src'
+import makeWASocket, { AnyMessageContent, delay, DisconnectReason, fetchLatestBaileysVersion, getAggregateVotesInPollMessage, getContentType, makeCacheableSignalKeyStore, makeInMemoryStore, PHONENUMBER_MCC, proto, useMultiFileAuthState, WAMessageContent, WAMessageKey } from '../src'
 import MAIN_LOGGER from '../src/Utils/logger'
 import open from 'open'
 import fs from 'fs'
 
 const logger = MAIN_LOGGER.child({})
-logger.level = 'trace'
+logger.level = 'debug'
 
 const useStore = !process.argv.includes('--no-store')
 const doReplies = !process.argv.includes('--no-reply')
@@ -43,6 +43,8 @@ const startSock = async() => {
 		logger,
 		printQRInTerminal: !usePairingCode,
 		mobile: useMobile,
+		maxMsgRetryCount: 15,
+		retryRequestDelayMs: 500,
 		auth: {
 			creds: state.creds,
 			/** caching makes the store faster to send/recv messages */
@@ -212,9 +214,11 @@ const startSock = async() => {
 				if(upsert.type === 'notify') {
 					for(const msg of upsert.messages) {
 						if(!msg.key.fromMe && doReplies) {
-							console.log('replying to', msg.key.remoteJid)
-							await sock!.readMessages([msg.key])
-							await sendMessageWTyping({ text: 'Hello there!' }, msg.key.remoteJid!)
+							if (getContentType(msg.message || undefined) == "conversation" || getContentType(msg.message || undefined) == "extendedTextMessage") {
+								console.log('replying to', msg.key.remoteJid)
+								await sock!.readMessages([msg.key])
+								// await sendMessageWTyping({ text: 'Hello there!' }, msg.key.remoteJid!)
+							}
 						}
 					}
 				}
