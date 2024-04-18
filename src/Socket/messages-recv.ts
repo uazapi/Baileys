@@ -210,14 +210,6 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 				logger.info({ msgAttrs: node.attrs, retryCount }, 'sent retry receipt')
 			}
 		)
-		if(retryRequestDelayMs) {
-			delay(retryRequestDelayMs * 2).then(async () => {
-				const newRetryCount = msgRetryCache.get<number>(msgId);
-				if (retryCount == newRetryCount) {
-					processNodeWithBuffer(node, 'processing message', handleMessage)
-				}
-			})
-		}
 	}
 
 	const handleEncryptNotification = async(node: BinaryNode) => {
@@ -691,7 +683,6 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 	}
 
 	const handleMessage = async(node: BinaryNode) => {
-
 		const { fullMessage: msg, category, author, decrypt } = decryptMessageNode(
 			node,
 			authState.creds.me!.id,
