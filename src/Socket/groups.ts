@@ -7,7 +7,7 @@ import { makeChatsSocket } from './chats'
 export const makeGroupsSocket = (config: SocketConfig) => {
 	const sock = makeChatsSocket(config)
 	const { authState, ev, query, upsertMessage } = sock
-	
+
 		const exponentialBackoff = async (retries: number, fn, delay: number = 1000): Promise<any> => {
 			try {
 				return await fn();
@@ -22,14 +22,14 @@ export const makeGroupsSocket = (config: SocketConfig) => {
 	
 		const groupQuery = async(jid: string, type: 'get' | 'set', content: BinaryNode[], retries: number = 5) => {
 			const queryFunction = () => query({
-				tag: 'iq',
-				attrs: {
-					type,
-					xmlns: 'w:g2',
-					to: jid,
-				},
-				content
-			})
+			tag: 'iq',
+			attrs: {
+				type,
+				xmlns: 'w:g2',
+				to: jid,
+			},
+			content
+		})
 	
 			try {
 				return await exponentialBackoff(retries, queryFunction);
@@ -38,15 +38,15 @@ export const makeGroupsSocket = (config: SocketConfig) => {
 				throw error; 
 			}
 		};
-	
-		const groupMetadata = async(jid: string) => {
-			const result = await groupQuery(
-				jid,
-				'get',
+
+	const groupMetadata = async(jid: string) => {
+		const result = await groupQuery(
+			jid,
+			'get',
 			[ { tag: 'query', attrs: { request: 'interactive' } } ]
-			)
+		)
 		return extractGroupMetadata(result)
-		}
+	}
 
 
 	const groupFetchAllParticipating = async() => {
@@ -184,8 +184,8 @@ export const makeGroupsSocket = (config: SocketConfig) => {
 				}]
 			)
 			const node = getBinaryNodeChild(result, 'membership_requests_action')
-			const nodeAction = getBinaryNodeChild(node, action)
-			const participantsAffected = getBinaryNodeChildren(nodeAction, 'participant')
+			const nodeAction = getBinaryNodeChild(node!, action)
+			const participantsAffected = getBinaryNodeChildren(nodeAction!, 'participant')
 			return participantsAffected.map(p => {
 				return { status: p.attrs.error || '200', jid: p.attrs.jid }
 			})
