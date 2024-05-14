@@ -7,27 +7,46 @@ import { makeChatsSocket } from './chats'
 export const makeGroupsSocket = (config: SocketConfig) => {
 	const sock = makeChatsSocket(config)
 	const { authState, ev, query, upsertMessage } = sock
-
-	const groupQuery = async(jid: string, type: 'get' | 'set', content: BinaryNode[]) => (
-		query({
-			tag: 'iq',
-			attrs: {
-				type,
-				xmlns: 'w:g2',
-				to: jid,
-			},
-			content
-		})
-	)
-
-	const groupMetadata = async(jid: string) => {
-		const result = await groupQuery(
-			jid,
-			'get',
+	
+		const exponentialBackoff = async (retries: number, fn, delay: number = 1000): Promise<any> => {
+			try {
+				return await fn();
+			} catch (error) {
+				if (retries > 0 && error.data === 429) {
+					await new Promise(resolve => setTimeout(resolve, delay));
+					return exponentialBackoff(retries - 1, fn, delay * 2);
+				}
+				throw error;
+			}
+		};
+	
+		const groupQuery = async(jid: string, type: 'get' | 'set', content: BinaryNode[], retries: number = 5) => {
+			const queryFunction = () => query({
+				tag: 'iq',
+				attrs: {
+					type,
+					xmlns: 'w:g2',
+					to: jid,
+				},
+				content
+			})
+	
+			try {
+				return await exponentialBackoff(retries, queryFunction);
+			} catch (error) {
+				console.error("Failed to perform group query:", error);
+				throw error; 
+			}
+		};
+	
+		const groupMetadata = async(jid: string) => {
+			const result = await groupQuery(
+				jid,
+				'get',
 			[ { tag: 'query', attrs: { request: 'interactive' } } ]
-		)
+			)
 		return extractGroupMetadata(result)
-	}
+		}
 
 
 	const groupFetchAllParticipating = async() => {
