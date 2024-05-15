@@ -6,53 +6,64 @@ export class WebSocketClient extends AbstractSocketClient {
 
 	protected socket: WebSocket | null = null
 
-	get isOpen(): boolean {
+    get isOpen(): boolean {
 		return this.socket?.readyState === WebSocket.OPEN
-	}
-	get isClosed(): boolean {
+    }
+    get isClosed(): boolean {
 		return this.socket === null || this.socket?.readyState === WebSocket.CLOSED
-	}
-	get isClosing(): boolean {
+    }
+    get isClosing(): boolean {
 		return this.socket === null || this.socket?.readyState === WebSocket.CLOSING
-	}
-	get isConnecting(): boolean {
+    }
+    get isConnecting(): boolean {
 		return this.socket?.readyState === WebSocket.CONNECTING
-	}
+    }
 
-	async connect(): Promise<void> {
+    async connect(): Promise<void> {
 		if(this.socket) {
 			return
-		}
+        }
 
-		this.socket = new WebSocket(this.url, {
-			origin: DEFAULT_ORIGIN,
-			headers: this.config.options?.headers as {},
-			handshakeTimeout: this.config.connectTimeoutMs,
-			timeout: this.config.connectTimeoutMs,
-			agent: this.config.agent,
-			localAddress: this.config.localAddress
-		})
+        console.log('Connecting with localAddress:', this.config.localAddress); // Log de depuração
 
-		this.socket.setMaxListeners(0)
+        this.socket = new WebSocket(this.url, {
+            origin: DEFAULT_ORIGIN,
+            headers: this.config.options?.headers as {},
+            handshakeTimeout: this.config.connectTimeoutMs,
+            timeout: this.config.connectTimeoutMs,
+            agent: this.config.agent,
+            localAddress: this.config.localAddress
+        });
+
+        console.log('WebSocket configuration:', {
+            origin: DEFAULT_ORIGIN,
+            headers: this.config.options?.headers,
+            handshakeTimeout: this.config.connectTimeoutMs,
+            timeout: this.config.connectTimeoutMs,
+            agent: this.config.agent,
+            localAddress: this.config.localAddress
+        }); // Log de depuração da configuração completa
+
+        this.socket.setMaxListeners(0);
 
 		const events = ['close', 'error', 'upgrade', 'message', 'open', 'ping', 'pong', 'unexpected-response']
 
 		for(const event of events) {
 			this.socket?.on(event, (...args: any[]) => this.emit(event, ...args))
-		}
-	}
+        }
+    }
 
-	async close(): Promise<void> {
+    async close(): Promise<void> {
 		if(!this.socket) {
 			return
-		}
+        }
 
 		this.socket.close()
 		this.socket = null
-	}
-	send(str: string | Uint8Array, cb?: (err?: Error) => void): boolean {
+    }
+    send(str: string | Uint8Array, cb?: (err?: Error) => void): boolean {
 		this.socket?.send(str, cb)
 
 		return Boolean(this.socket)
-	}
+    }
 }
