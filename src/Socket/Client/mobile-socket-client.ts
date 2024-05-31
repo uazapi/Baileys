@@ -28,8 +28,7 @@ export class MobileSocketClient extends AbstractSocketClient {
 		} else {
 			this.socket = connect({
 				host: this.url.hostname,
-				port: Number(this.url.port) || 443,
-				localAddress: this.config.localAddress
+				port: Number(this.url.port) || 443
 			})
 		}
 
