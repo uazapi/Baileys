@@ -35,14 +35,14 @@ export class WebSocketClient extends AbstractSocketClient {
             localAddress: this.config.localAddress
         });
 
-        console.log('WebSocket configuration:', {
-            origin: DEFAULT_ORIGIN,
-            headers: this.config.options?.headers,
-            handshakeTimeout: this.config.connectTimeoutMs,
-            timeout: this.config.connectTimeoutMs,
-            agent: this.config.agent,
-            localAddress: this.config.localAddress
-        }); // Log de depuração da configuração completa
+        // console.log('WebSocket configuration:', {
+        //     origin: DEFAULT_ORIGIN,
+        //     headers: this.config.options?.headers,
+        //     handshakeTimeout: this.config.connectTimeoutMs,
+        //     timeout: this.config.connectTimeoutMs,
+        //     agent: this.config.agent,
+        //     localAddress: this.config.localAddress
+        // }); // Log de depuração da configuração completa
 
         this.socket.setMaxListeners(0);
 
