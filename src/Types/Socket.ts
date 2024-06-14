@@ -134,4 +134,7 @@ export type SocketConfig = {
 
     /** Socket passthrough */
     socket?: any
+
+    /** Use if your server has multiple IPs and you want to specify the local IP */
+    localAddress?: string,
 }
