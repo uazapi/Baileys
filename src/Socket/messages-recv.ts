@@ -657,7 +657,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 							if (retryUser < 2){
 								logger.debug({ attrs, key }, 'recv retry request')
 								const retryNode = getBinaryNodeChild(node, 'retry')
-								await sendMessagesAgain(key, ids, retryNode!)
+								//await sendMessagesAgain(key, ids, retryNode!)
 								msgRetryCache.set(key.participant, retryUser + 1)
 							} else {
 								logger.info({ attrs, key }, 'will not send message again, reached retry limit for user')
