@@ -17,6 +17,7 @@ export const makeChatsSocket = (config: SocketConfig) => {
 		fireInitQueries,
 		appStateMacVerification,
 		shouldIgnoreJid,
+		shouldIgnoreParticipant,
 		shouldSyncHistoryMessage,
 	} = config
 	const sock = makeSocket(config)
@@ -165,9 +166,7 @@ export const makeChatsSocket = (config: SocketConfig) => {
 
 		const usyncNode = getBinaryNodeChild(result, 'usync')
 		const listNode = getBinaryNodeChild(usyncNode, 'list')
-		const users = getBinaryNodeChildren(listNode, 'user')
-
-		return users
+		return getBinaryNodeChildren(listNode, 'user')
 	}
 
 	const onWhatsApp = async(...jids: string[]) => {
@@ -194,18 +193,36 @@ export const makeChatsSocket = (config: SocketConfig) => {
 		}).filter(item => item.exists)
 	}
 
-	const fetchStatus = async(jid: string) => {
-		const [result] = await interactiveQuery(
-			[{ tag: 'user', attrs: { jid } }],
+	const fetchStatus = async(...jids: string[]) => {
+		const list = jids.map((jid) => ({ tag: 'user', attrs: { jid } }))
+		const results = await interactiveQuery(
+			list,
 			{ tag: 'status', attrs: {} }
 		)
-		if(result) {
-			const status = getBinaryNodeChild(result, 'status')
+		return results.map(item => {
+			const status = getBinaryNodeChild(item, 'status')!
 			return {
-				status: status?.content!.toString(),
+				user: item.attrs.jid,
+				status: status?.content?.toString() || null,
 				setAt: new Date(+(status?.attrs.t || 0) * 1000)
 			}
-		}
+		})
+	}
+
+	const fetchDisappearingDuration = async(...jids: string[]) => {
+		const list = jids.map((jid) => ({ tag: 'user', attrs: { jid } }))
+		const results = await interactiveQuery(
+			list,
+			{ tag: 'disappearing_mode', attrs: {} }
+		)
+		return results.map(item => {
+			const result = getBinaryNodeChild(item, 'disappearing_mode')!
+			return {
+				user: item.attrs.jid,
+				duration: parseInt(result?.attrs.duration),
+				setAt: new Date(+(result?.attrs.t || 0) * 1000)
+			}
+		})
 	}
 
 	/** update the profile picture for yourself or a group */
@@ -529,7 +546,8 @@ export const makeChatsSocket = (config: SocketConfig) => {
 		const result = await query({
 			tag: 'iq',
 			attrs: {
-				to: jid,
+				target: jid,
+				to: S_WHATSAPP_NET,
 				type: 'get',
 				xmlns: 'w:profile:picture'
 			},
@@ -605,6 +623,10 @@ export const makeChatsSocket = (config: SocketConfig) => {
 		const participant = attrs.participant || attrs.from
 
 		if(shouldIgnoreJid(jid) && jid !== '@s.whatsapp.net') {
+			return
+		}
+
+		if(jid.endsWith('@g.us') && shouldIgnoreParticipant(participant)) {
 			return
 		}
 
@@ -975,6 +997,7 @@ export const makeChatsSocket = (config: SocketConfig) => {
 		onWhatsApp,
 		fetchBlocklist,
 		fetchStatus,
+		fetchDisappearingDuration,
 		updateProfilePicture,
 		removeProfilePicture,
 		updateProfileStatus,
