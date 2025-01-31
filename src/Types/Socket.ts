@@ -126,4 +126,7 @@ export type SocketConfig = {
     cachedGroupMetadata: (jid: string) => Promise<GroupMetadata | undefined>
 
     makeSignalRepository: (auth: SignalAuthState) => SignalRepository
+
+    /** Use if your server has multiple IPs and you want to specify the local IP */
+    localAddress?: string,
 }
